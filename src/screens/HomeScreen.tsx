@@ -4,11 +4,13 @@ import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import {Swipeable} from 'react-native-gesture-handler';
 
 type Email = {
   id: string;
@@ -33,6 +35,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   useEffect(() => {
     const loadEmails = async () => {
@@ -66,6 +69,41 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadEmails();
+    setRefreshing(false);
+  };
+
+  const moveEmail = async (email: Email, folder: string) => {
+    const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
+    if (storedToken) {
+      try {
+        const response = await fetch(
+          `http://localhost:3001/api/emails/${email.internal_id}/move/${folder}`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${storedToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({id: email.id}),
+          },
+        );
+
+        if (!response.ok) {
+          const body = await response.text();
+          throw new Error(`HTTP error: ${response.status} - ${body}`);
+        }
+
+        // Remove the email from the list
+        setEmails(emails.filter(item => item.id !== email.id));
+      } catch (error) {
+        console.error('Error moving email:', error);
+      }
+    }
+  };
+
   const renderItem = ({item}: {item: Email}) => {
     const formattedDate = new Date(item.date).toLocaleString('en-US', {
       month: 'short',
@@ -74,14 +112,31 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
       minute: '2-digit',
     });
 
+    const renderRightActions = () => (
+      <View style={styles.swipeActions}>
+        <TouchableOpacity
+          onPress={() => moveEmail(item, 'Archive')}
+          style={[styles.swipeButton, styles.archiveButton]}>
+          <Text style={styles.swipeText}>Archive</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => moveEmail(item, 'Junk Email')}
+          style={[styles.swipeButton, styles.spamButton]}>
+          <Text style={styles.swipeText}>Spam</Text>
+        </TouchableOpacity>
+      </View>
+    );
+
     return (
-      <TouchableOpacity
-        style={styles.emailItem}
-        onPress={() => navigation.navigate('Email', {email: item})}>
-        <Text style={styles.emailFrom}>{item.from_name}</Text>
-        <Text style={styles.emailSubject}>{item.subject}</Text>
-        <Text style={styles.emailDate}>{formattedDate}</Text>
-      </TouchableOpacity>
+      <Swipeable renderRightActions={renderRightActions}>
+        <TouchableOpacity
+          style={styles.emailItem}
+          onPress={() => navigation.navigate('Email', {email: item})}>
+          <Text style={styles.emailFrom}>{item.from_name}</Text>
+          <Text style={styles.emailSubject}>{item.subject}</Text>
+          <Text style={styles.emailDate}>{formattedDate}</Text>
+        </TouchableOpacity>
+      </Swipeable>
     );
   };
 
@@ -108,6 +163,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
         renderItem={renderItem}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.emailList}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       />
     </View>
   );
@@ -154,6 +212,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8a8a8a',
     marginTop: 8,
+  },
+  swipeActions: {
+    flexDirection: 'row',
+  },
+  swipeButton: {
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 80,
+  },
+  archiveButton: {
+    backgroundColor: '#4caf50',
+  },
+  spamButton: {
+    backgroundColor: '#f44336',
+  },
+  swipeText: {
+    color: '#ffffff',
   },
 });
 
