@@ -28,7 +28,7 @@ type EmailScreenProps = {
 };
 
 const HEADER_MAX_HEIGHT = 100;
-const HEADER_MIN_HEIGHT = 60;
+const HEADER_MIN_HEIGHT = 70;
 const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 
 const TOKEN_KEY = 'accessToken';
@@ -88,6 +88,12 @@ const EmailScreen: React.FC<EmailScreenProps> = ({route}) => {
     extrapolate: 'clamp',
   });
 
+  const dateOpacity = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
+    outputRange: [1, 0.5, 0],
+    extrapolate: 'clamp',
+  });
+
   return (
     <View style={styles.container}>
       <Animated.ScrollView
@@ -117,7 +123,9 @@ const EmailScreen: React.FC<EmailScreenProps> = ({route}) => {
           {email.from_name}{' '}
           <Text style={styles.senderAddr}>&lt;{email.from_addr}&gt;</Text>
         </Text>
-        <Text style={styles.date}>{formattedDate}</Text>
+        <Animated.Text style={[styles.date, {opacity: dateOpacity}]}>
+          {formattedDate}
+        </Animated.Text>
       </Animated.View>
     </View>
   );
