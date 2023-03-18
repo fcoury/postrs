@@ -38,16 +38,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   useEffect(() => {
-    const loadEmails = async () => {
-      const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
-      if (storedToken) {
-        await fetchEmails(storedToken);
-      } else {
-        setLoading(false);
-      }
-    };
     loadEmails();
   }, []);
+
+  const loadEmails = async () => {
+    const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
+    if (storedToken) {
+      await fetchEmails(storedToken);
+    } else {
+      setLoading(false);
+    }
+  };
 
   const fetchEmails = async (token: string) => {
     try {
