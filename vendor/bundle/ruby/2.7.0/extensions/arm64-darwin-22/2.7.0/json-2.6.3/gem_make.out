@@ -1,0 +1,13 @@
+current directory: /Users/fcoury/code/postrs/vendor/bundle/ruby/2.7.0/gems/json-2.6.3/ext/json
+/Users/fcoury/.local/share/rtx/installs/ruby/2.7.6/bin/ruby -I /Users/fcoury/.local/share/rtx/installs/ruby/2.7.6/lib/ruby/2.7.0 -r ./siteconf20230317-14389-17q79zg.rb extconf.rb
+creating Makefile
+
+current directory: /Users/fcoury/code/postrs/vendor/bundle/ruby/2.7.0/gems/json-2.6.3/ext/json
+make "DESTDIR=" clean
+
+current directory: /Users/fcoury/code/postrs/vendor/bundle/ruby/2.7.0/gems/json-2.6.3/ext/json
+make "DESTDIR="
+make: Nothing to be done for `all'.
+
+current directory: /Users/fcoury/code/postrs/vendor/bundle/ruby/2.7.0/gems/json-2.6.3/ext/json
+make "DESTDIR=" install

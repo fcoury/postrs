@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    ".autotermrc": "ini",
+    "*.ipp": "cpp"
+  }
+}
