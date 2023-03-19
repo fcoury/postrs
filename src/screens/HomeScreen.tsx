@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {StackNavigationProp} from '@react-navigation/stack';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react'; // Add useContext to the imports
 import {
   ActivityIndicator,
   FlatList,
@@ -11,6 +11,8 @@ import {
   View,
 } from 'react-native';
 import {Swipeable} from 'react-native-gesture-handler';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {AuthContext} from '../../App'; // Import AuthContext
 
 type Email = {
   internal_id: string;
@@ -28,10 +30,17 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
 type HomeScreenProps = {
   navigation: HomeScreenNavigationProp;
+  route: {
+    params: {
+      token: string;
+      onLogout: () => void;
+    };
+  };
 };
 
 const TOKEN_KEY = 'accessToken';
 const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
+  const {setToken} = useContext(AuthContext); // Access the setToken function from AuthContext
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null | unknown>(null);
@@ -68,6 +77,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem(TOKEN_KEY);
+    setToken(null); // Update the token state in App.tsx
   };
 
   const onRefresh = async () => {
@@ -119,7 +133,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
         <TouchableOpacity
           onPress={() => moveEmail(item, 'Archive')}
           style={[styles.swipeButton, styles.archiveButton]}>
-          <Text style={styles.swipeText}>Archive</Text>
+          <MaterialCommunityIcons
+            name="email-alert"
+            size={24}
+            color="#ffffff"
+          />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => moveEmail(item, 'Junk Email')}
@@ -154,6 +172,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
     return (
       <View style={styles.centerContainer}>
         <Text>Error: {error.message}</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -224,6 +245,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: 80,
+    height: 64,
   },
   archiveButton: {
     backgroundColor: '#4caf50',
@@ -233,6 +255,16 @@ const styles = StyleSheet.create({
   },
   swipeText: {
     color: '#ffffff',
+  },
+  logoutButton: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#6200ee',
+  },
+  logoutButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
   },
 });
 
