@@ -13,7 +13,7 @@ import {
 import {Swipeable} from 'react-native-gesture-handler';
 
 type Email = {
-  id: string;
+  internal_id: string;
   subject: string;
   date: string;
   from_name: string;
@@ -34,7 +34,7 @@ const TOKEN_KEY = 'accessToken';
 const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<Error | null | unknown>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
       }
       const jsonResponse = await response.json();
       setEmails(jsonResponse);
-    } catch (error) {
+    } catch (error: Error | unknown) {
       setError(error);
     } finally {
       setLoading(false);
@@ -88,7 +88,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
               Authorization: `Bearer ${storedToken}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({id: email.id}),
           },
         );
 
@@ -98,7 +97,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
         }
 
         // Remove the email from the list
-        setEmails(emails.filter(item => item.id !== email.id));
+        setEmails(
+          emails.filter(item => item.internal_id !== email.internal_id),
+        );
       } catch (error) {
         console.error('Error moving email:', error);
       }
@@ -162,7 +163,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
       <FlatList
         data={emails}
         renderItem={renderItem}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.internal_id}
         contentContainerStyle={styles.emailList}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
