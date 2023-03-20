@@ -3,6 +3,7 @@ import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Animated,
+  Button,
   Image,
   StyleSheet,
   Text,
@@ -32,7 +33,7 @@ const HEADER_MIN_HEIGHT = 70;
 const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 
 const TOKEN_KEY = 'accessToken';
-const EmailScreen: React.FC<EmailScreenProps> = ({route}) => {
+const EmailScreen: React.FC<EmailScreenProps> = ({navigation, route}) => {
   const {email} = route.params;
   const [emailBody, setEmailBody] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -51,7 +52,7 @@ const EmailScreen: React.FC<EmailScreenProps> = ({route}) => {
       try {
         const token = await AsyncStorage.getItem(TOKEN_KEY);
         const response = await fetch(
-          `http://localhost:3001/api/emails/${email.internal_id}`,
+          `https://postrs.gistia.online/api/emails/${email.internal_id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -69,7 +70,18 @@ const EmailScreen: React.FC<EmailScreenProps> = ({route}) => {
     fetchEmailBody();
   }, [email.internal_id]);
 
-  console.log('emailBody:', emailBody);
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+  };
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button onPress={handleLogout} title="Logout" color="#000" />
+      ),
+    });
+  }, [navigation]);
 
   const customImageRenderer = {
     ImageView: Image,

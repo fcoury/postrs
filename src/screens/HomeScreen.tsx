@@ -3,6 +3,7 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import React, {useContext, useEffect, useState} from 'react'; // Add useContext to the imports
 import {
   ActivityIndicator,
+  Button,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -61,11 +62,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
 
   const fetchEmails = async (token: string) => {
     try {
-      const response = await fetch('http://localhost:3001/api/emails', {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        'http://postrs.gistia.online:3001/api/emails',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       if (!response.ok) {
         const body = await response.text();
         throw new Error(`HTTP error: ${response.status} - ${body}`);
@@ -81,8 +85,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem(TOKEN_KEY);
-    setToken(null); // Update the token state in App.tsx
+    setToken(null);
   };
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button onPress={handleLogout} title="Logout" color="#000" />
+      ),
+    });
+  }, [navigation]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -95,7 +107,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
     if (storedToken) {
       try {
         const response = await fetch(
-          `http://localhost:3001/api/emails/${email.internal_id}/move/${folder}`,
+          `http://postrs.gistia.online:3001/api/emails/${email.internal_id}/move/${folder}`,
           {
             method: 'PUT',
             headers: {
@@ -133,16 +145,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
         <TouchableOpacity
           onPress={() => moveEmail(item, 'Archive')}
           style={[styles.swipeButton, styles.archiveButton]}>
+          <MaterialCommunityIcons name="archive" size={24} color="#ffffff" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => moveEmail(item, 'Junk Email')}
+          style={[styles.swipeButton, styles.spamButton]}>
           <MaterialCommunityIcons
             name="email-alert"
             size={24}
             color="#ffffff"
           />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => moveEmail(item, 'Junk Email')}
-          style={[styles.swipeButton, styles.spamButton]}>
-          <Text style={styles.swipeText}>Spam</Text>
         </TouchableOpacity>
       </View>
     );
@@ -240,12 +252,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   swipeButton: {
-    borderRadius: 8,
+    // borderRadius: 8,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 80,
-    height: 64,
+    width: 60,
+    height: 95,
+    opacity: 0.8,
   },
   archiveButton: {
     backgroundColor: '#4caf50',
