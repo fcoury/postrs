@@ -15,6 +15,9 @@ import {Swipeable} from 'react-native-gesture-handler';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {AuthContext} from '../../App'; // Import AuthContext
 
+// const API_BASE_URL = 'http://192.168.68.118:3001';
+const API_BASE_URL = 'https://postrs.gistia.online';
+
 type Email = {
   internal_id: string;
   subject: string;
@@ -62,14 +65,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
 
   const fetchEmails = async (token: string) => {
     try {
-      const response = await fetch(
-        'http://postrs.gistia.online:3001/api/emails',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await fetch(`${API_BASE_URL}/api/emails`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
       if (!response.ok) {
         const body = await response.text();
         throw new Error(`HTTP error: ${response.status} - ${body}`);
@@ -84,6 +84,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
   };
 
   const handleLogout = async () => {
+    await AsyncStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+  };
+
+  const handleRefresh = async () => {
     await AsyncStorage.removeItem(TOKEN_KEY);
     setToken(null);
   };
@@ -107,7 +112,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
     if (storedToken) {
       try {
         const response = await fetch(
-          `http://postrs.gistia.online:3001/api/emails/${email.internal_id}/move/${folder}`,
+          `${API_BASE_URL}/api/emails/${email.internal_id}/move/${folder}`,
           {
             method: 'PUT',
             headers: {
@@ -184,6 +189,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({navigation}) => {
     return (
       <View style={styles.centerContainer}>
         <Text>Error: {error.message}</Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={onRefresh}>
+          <Text style={styles.logoutButtonText}>Refresh</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
@@ -257,7 +265,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: 60,
-    height: 95,
+    height: 30,
     opacity: 0.8,
   },
   archiveButton: {
